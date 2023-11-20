@@ -15,23 +15,36 @@ type Pixel struct {
 	a uint8
 }
 
-func main() {
-	reader, err := os.Open("tester.png")
+// Function for basic error handling
+func check(err error, errCode string) {
 	if err != nil {
-		print("Error opening file.")
-		panic(err)
+		print(errCode)
 	}
-	defer reader.Close()
+}
 
+func main() {
+	//Read file
+	reader, err := os.Open("tester.png")
+	defer reader.Close()
+	check(err, "Error opening file.")
+
+	//Decode file into usable format
 	m, err := png.Decode(reader)
+	check(err, "Error decoding file.")
+
 	if err != nil {
-		print("Error decoding file.")
 		panic(err)
 	}
+
+	//Define dimensions of image
 	bounds := m.Bounds()
 
+	//Create array for pixels.
 	var pixArray [][]Pixel
 
+	//Populate array of pixels using data from read file.
+	//Starts from top left and goes to bottom right BY ROW.
+	//Top Left and Bottom Right are defined by (Min.x, Min.y) and (Max.X, Max.Y) of bounds, respectively.
 	for y := bounds.Min.Y; y < bounds.Max.Y; y++ {
 		pixArray = append(pixArray, []Pixel{})
 		for x := bounds.Min.X; x < bounds.Max.X; x++ {
@@ -41,9 +54,13 @@ func main() {
 		}
 	}
 
+	//Get Dimensions of image and create a new image for output based on dimensions
+	//Image is defined as a rectangle with W: Max.X and L: Max.Y based on dimensions
 	origin := image.Point{}
 	last := image.Point{X: bounds.Max.X, Y: bounds.Max.Y}
 	img := image.NewRGBA(image.Rectangle{Min: origin, Max: last})
+
+	//Populate output with pixels from pixArray
 	for x := bounds.Min.X; x < bounds.Max.X; x++ {
 		for y := bounds.Min.Y; y < bounds.Max.Y; y++ {
 			currPix := pixArray[y][x]
@@ -51,9 +68,10 @@ func main() {
 		}
 	}
 
+	//Create file for output
 	output, _ := os.Create("output.png")
-	finErr := png.Encode(output, img)
-	if finErr != nil {
-		return
-	}
+
+	//Write output image to "output.png" and encode to .png format
+	err = png.Encode(output, img)
+	check(err, "Error encoding image")
 }
