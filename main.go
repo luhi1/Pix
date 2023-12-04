@@ -5,6 +5,7 @@ import (
 	"image/color"
 	"image/png"
 	"os"
+	"fmt"
 )
 
 type Pixel struct {
@@ -55,13 +56,18 @@ func proccessImagePixels(pixArray [][]Pixel) [][]Pixel {
 	for y := 0; y < len(pixArray); y++ {
 		for x := 0; x < len(pixArray[y]); x++ {
 			pixel := pixArray[x][y]
+			if len(sortedArray) == 0 {
+				sortedArray = append(sortedArray, []Pixel{pixel})
+			}
 			for i := 0; i < len(sortedArray); i++ {
 				if ((pixel.r <= sortedArray[i][0].r+15) || (pixel.r >= sortedArray[i][0].r-15)) &&
 					((pixel.g <= sortedArray[i][0].g+15) || (pixel.g >= sortedArray[i][0].g-15)) &&
 					((pixel.b <= sortedArray[i][0].b+15) || (pixel.b >= sortedArray[i][0].b-15)) {
 
 					alpha := pixel.a
-					for j := 0; j < len(sortedArray[i]); j++ {
+					lengthi := len(sortedArray[i])
+					for j := 0; j < lengthi; j++ {
+					println(sortedArray[i][j].r)
 						if alpha >= sortedArray[i][j].a {
 							sortedArray[i] = insert(sortedArray[i], j, pixel)
 						}
@@ -76,7 +82,7 @@ func proccessImagePixels(pixArray [][]Pixel) [][]Pixel {
 
 		}
 	}
-	return pixArray
+	return sortedArray
 }
 
 func insert(a []Pixel, index int, value Pixel) []Pixel {
@@ -85,6 +91,7 @@ func insert(a []Pixel, index int, value Pixel) []Pixel {
 	}
 	a = append(a[:index+1], a[index:]...) // index < len(a)
 	a[index] = value
+	fmt.Println(a)
 	return a
 }
 
