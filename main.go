@@ -17,7 +17,7 @@ type Pixel struct {
 // Function to be used for User Input/Config
 func main() {
 	//Read file
-	reader, err := os.Open("cat_PNG50533-2333883645.png")
+	reader, err := os.Open("a5e89dc19d0a7690253ccb52b6c85fc7.png")
 	defer reader.Close()
 	check(err, "Error opening file.")
 
@@ -50,85 +50,76 @@ func sortImagePixels(pixArray [][]Pixel) [][]Pixel {
 // Sort pixels into arrays of similar pixels (to reduce load on sorting algorithm)
 // Merge back into an 2D array (could be just a 1D array, but 2D makes for easier proccessing!)
 func proccessImagePixels(pixArray [][]Pixel) [][]Pixel {
-	sortedArray := [][]Pixel{}
+	sortedArrays := [][]Pixel{}
 
 	for y := 0; y < len(pixArray); y++ {
 		for x := 0; x < len(pixArray[y]); x++ {
 			pixel := pixArray[y][x]
-			if len(sortedArray) == 0 {
-				sortedArray = append(sortedArray, []Pixel{pixel})
-			} else {
-				for i := 0; i < len(sortedArray); i++ {
-					indexPixel := sortedArray[i][0]
-					indexPixelRedMin := indexPixel.r - 15
-					if indexPixelRedMin > indexPixel.r {
-						indexPixelRedMin = 0
-					}
-					indexPixelGreenMin := indexPixel.g - 15
-					if indexPixelGreenMin > indexPixel.g {
-						indexPixelGreenMin = 0
-					}
-					indexPixelBlueMin := indexPixel.b - 15
-					if indexPixelBlueMin > indexPixel.b {
-						indexPixelBlueMin = 0
-					}
+			if len(sortedArrays) == 0 {
+				sortedArrays = append(sortedArrays, []Pixel{pixel})
+				continue
+			}
+			for i := 0; i < len(sortedArrays); i++ {
+				indexPixel := sortedArrays[i][0]
+				indexPixelRedMin := indexPixel.r - 15
+				if indexPixelRedMin > indexPixel.r {
+					indexPixelRedMin = 0
+				}
+				indexPixelGreenMin := indexPixel.g - 15
+				if indexPixelGreenMin > indexPixel.g {
+					indexPixelGreenMin = 0
+				}
+				indexPixelBlueMin := indexPixel.b - 15
+				if indexPixelBlueMin > indexPixel.b {
+					indexPixelBlueMin = 0
+				}
 
-					indexPixelRedMax := indexPixel.r + 15
-					if indexPixelRedMax < indexPixel.r {
-						indexPixelRedMax = 255
-					}
-					indexPixelGreenMax := indexPixel.g + 15
-					if indexPixelGreenMax < indexPixel.g {
-						indexPixelGreenMax = 255
-					}
-					indexPixelBlueMax := indexPixel.b + 15
-					if indexPixelBlueMax < indexPixel.b {
-						indexPixelBlueMax = 255
-					}
+				indexPixelRedMax := indexPixel.r + 15
+				if indexPixelRedMax < indexPixel.r {
+					indexPixelRedMax = 255
+				}
+				indexPixelGreenMax := indexPixel.g + 15
+				if indexPixelGreenMax < indexPixel.g {
+					indexPixelGreenMax = 255
+				}
+				indexPixelBlueMax := indexPixel.b + 15
+				if indexPixelBlueMax < indexPixel.b {
+					indexPixelBlueMax = 255
+				}
 
-					if ((pixel.r <= indexPixelRedMax) && (pixel.r >= indexPixelRedMin)) &&
-						((pixel.g <= indexPixelGreenMax) && (pixel.g >= indexPixelGreenMin)) &&
-						((pixel.b <= indexPixelBlueMax) && (pixel.b >= indexPixelBlueMin)) {
+				if ((pixel.r <= indexPixelRedMax) && (pixel.r >= indexPixelRedMin)) &&
+					((pixel.g <= indexPixelGreenMax) && (pixel.g >= indexPixelGreenMin)) &&
+					((pixel.b <= indexPixelBlueMax) && (pixel.b >= indexPixelBlueMin)) {
 
-						sortedArray[i] = append(sortedArray[i], pixel)
-						break
-					}
+					sortedArrays[i] = append(sortedArrays[i], pixel)
+					break
+				}
 
-					if i == len(sortedArray)-1 {
-						sortedArray = append(sortedArray, []Pixel{pixel})
-						break
-					}
+				if i == len(sortedArrays)-1 {
+					sortedArrays = append(sortedArrays, []Pixel{pixel})
+					break
 				}
 			}
 
 		}
 	}
 
-	sortedArrayOneArrayLol := []Pixel{}
-	for i := 0; i < len(sortedArray); i++ {
-		for j := 0; j < len(sortedArray[i]); j++ {
-			sortedArrayOneArrayLol = append(sortedArrayOneArrayLol, sortedArray[i][j])
+	sortedArraysOneArrayLol := []Pixel{}
+	for i := 0; i < len(sortedArrays); i++ {
+		for j := 0; j < len(sortedArrays[i]); j++ {
+			sortedArraysOneArrayLol = append(sortedArraysOneArrayLol, sortedArrays[i][j])
 		}
 	}
 
 	pixCounter := 0
 	for y := 0; y < len(pixArray); y++ {
 		for x := 0; x < len(pixArray[y]); x++ {
-			pixArray[y][x] = sortedArrayOneArrayLol[pixCounter]
+			pixArray[y][x] = sortedArraysOneArrayLol[pixCounter]
 			pixCounter++
 		}
 	}
 
 	return pixArray
-}
-
-func insert(a []Pixel, index int, value Pixel) []Pixel {
-	if len(a) == index { // nil or empty slice or after last element
-		return append(a, value)
-	}
-	a = append(a[:index+1], a[index:]...) // index < len(a)
-	a[index] = value
-	return a
 }
 
 // Convert file into 2D Array of Pixels
