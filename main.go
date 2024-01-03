@@ -5,7 +5,6 @@ import (
 	"image/color"
 	"image/png"
 	"os"
-	"fmt"
 )
 
 type Pixel struct {
@@ -18,7 +17,7 @@ type Pixel struct {
 // Function to be used for User Input/Config
 func main() {
 	//Read file
-	reader, err := os.Open("tester.png")
+	reader, err := os.Open("cat_PNG50533-2333883645.png")
 	defer reader.Close()
 	check(err, "Error opening file.")
 
@@ -55,34 +54,72 @@ func proccessImagePixels(pixArray [][]Pixel) [][]Pixel {
 
 	for y := 0; y < len(pixArray); y++ {
 		for x := 0; x < len(pixArray[y]); x++ {
-			pixel := pixArray[x][y]
+			pixel := pixArray[y][x]
 			if len(sortedArray) == 0 {
 				sortedArray = append(sortedArray, []Pixel{pixel})
-			}
-			for i := 0; i < len(sortedArray); i++ {
-				if ((pixel.r <= sortedArray[i][0].r+15) || (pixel.r >= sortedArray[i][0].r-15)) &&
-					((pixel.g <= sortedArray[i][0].g+15) || (pixel.g >= sortedArray[i][0].g-15)) &&
-					((pixel.b <= sortedArray[i][0].b+15) || (pixel.b >= sortedArray[i][0].b-15)) {
-
-					alpha := pixel.a
-					lengthi := len(sortedArray[i])
-					for j := 0; j < lengthi; j++ {
-					println(sortedArray[i][j].r)
-						if alpha >= sortedArray[i][j].a {
-							sortedArray[i] = insert(sortedArray[i], j, pixel)
-						}
+			} else {
+				for i := 0; i < len(sortedArray); i++ {
+					indexPixel := sortedArray[i][0]
+					indexPixelRedMin := indexPixel.r - 15
+					if indexPixelRedMin > indexPixel.r {
+						indexPixelRedMin = 0
 					}
-					break
-				}
+					indexPixelGreenMin := indexPixel.g - 15
+					if indexPixelGreenMin > indexPixel.g {
+						indexPixelGreenMin = 0
+					}
+					indexPixelBlueMin := indexPixel.b - 15
+					if indexPixelBlueMin > indexPixel.b {
+						indexPixelBlueMin = 0
+					}
 
-				if i == len(sortedArray) {
-					sortedArray = append(sortedArray, []Pixel{pixel})
+					indexPixelRedMax := indexPixel.r + 15
+					if indexPixelRedMax < indexPixel.r {
+						indexPixelRedMax = 255
+					}
+					indexPixelGreenMax := indexPixel.g + 15
+					if indexPixelGreenMax < indexPixel.g {
+						indexPixelGreenMax = 255
+					}
+					indexPixelBlueMax := indexPixel.b + 15
+					if indexPixelBlueMax < indexPixel.b {
+						indexPixelBlueMax = 255
+					}
+
+					if ((pixel.r <= indexPixelRedMax) && (pixel.r >= indexPixelRedMin)) &&
+						((pixel.g <= indexPixelGreenMax) && (pixel.g >= indexPixelGreenMin)) &&
+						((pixel.b <= indexPixelBlueMax) && (pixel.b >= indexPixelBlueMin)) {
+
+						sortedArray[i] = append(sortedArray[i], pixel)
+						break
+					}
+
+					if i == len(sortedArray)-1 {
+						sortedArray = append(sortedArray, []Pixel{pixel})
+						break
+					}
 				}
 			}
 
 		}
 	}
-	return sortedArray
+
+	sortedArrayOneArrayLol := []Pixel{}
+	for i := 0; i < len(sortedArray); i++ {
+		for j := 0; j < len(sortedArray[i]); j++ {
+			sortedArrayOneArrayLol = append(sortedArrayOneArrayLol, sortedArray[i][j])
+		}
+	}
+
+	pixCounter := 0
+	for y := 0; y < len(pixArray); y++ {
+		for x := 0; x < len(pixArray[y]); x++ {
+			pixArray[y][x] = sortedArrayOneArrayLol[pixCounter]
+			pixCounter++
+		}
+	}
+
+	return pixArray
 }
 
 func insert(a []Pixel, index int, value Pixel) []Pixel {
@@ -91,7 +128,6 @@ func insert(a []Pixel, index int, value Pixel) []Pixel {
 	}
 	a = append(a[:index+1], a[index:]...) // index < len(a)
 	a[index] = value
-	fmt.Println(a)
 	return a
 }
 
