@@ -75,6 +75,10 @@ func processImagePixels(pixArray [][]Pixel) [][]Pixel {
 // Sort pixels into arrays of similar pixels (to reduce load on sorting algorithm)
 // Merge back into an 2D array (could be just a 1D array, but 2D makes for easier proccessing!)
 func sortImagePixels(pixArray [][]Pixel, errRange uint8) [][]Pixel {
+	if pixArray == nil {
+		return pixArray
+	}
+
 	var temp []Pixel
 	for i := 0; i < len(pixArray); i++ {
 		for j := 0; j < len(pixArray[i]); j++ {
@@ -82,17 +86,14 @@ func sortImagePixels(pixArray [][]Pixel, errRange uint8) [][]Pixel {
 		}
 	}
 
-	//WE can do this becuase we assume that pixArray is not empty! (SHould probably include a check somewhere for that instead of using an error lol)
-	startingPoints := []*Pixel{&pixArray[0][0]}
-
-	//TODO: MAP OF POINTERS TO DO ARITHMETIC BECUASE GOLANG IS R******
-	sortedPixels := []Pixel{pixArray[0][0]}
+	startingPoints := []Node{}
+	sortedList := LinkedList{head: temp[0]}
 
 	for i := 1; i < len(temp); i++ {
-		pixel := temp[i]
+		pixel := Node{temp[i], nil}
 
 		for j := 0; j < len(startingPoints); j++ {
-			indexPixel := *startingPoints[j]
+			indexPixel := startingPoints[j].data
 			indexPixelRedMin := indexPixel.r - errRange
 			if indexPixelRedMin > indexPixel.r {
 				indexPixelRedMin = 0
@@ -122,13 +123,14 @@ func sortImagePixels(pixArray [][]Pixel, errRange uint8) [][]Pixel {
 			if ((pixel.r <= indexPixelRedMax) && (pixel.r >= indexPixelRedMin)) &&
 				((pixel.g <= indexPixelGreenMax) && (pixel.g >= indexPixelGreenMin)) &&
 				((pixel.b <= indexPixelBlueMax) && (pixel.b >= indexPixelBlueMin)) {
-				sortedPixels[]
+				temp := startingPoints[j]
+				pixel.next = temp.next.next
+				temp.next = pixel
 				break
 			}
 
 			if j == len(startingPoints)-1 {
-				sortedPixels = sortedPixels[] 
-				startingPoints = append(startingPoints, &pixel)
+				//TODO : Implement the "append to End " function here  and test and do the rest
 				break
 			}
 		}
