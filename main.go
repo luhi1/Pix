@@ -86,14 +86,14 @@ func sortImagePixels(pixArray [][]Pixel, errRange uint8) [][]Pixel {
 		}
 	}
 
-	startingPoints := []Node{}
-	sortedList := LinkedList{head: temp[0]}
+	startingPoints := []Node{Node{temp[0], nil}}
+	sortedList := LinkedList{&startingPoints[0]}
 
 	for i := 1; i < len(temp); i++ {
 		pixel := Node{temp[i], nil}
 
 		for j := 0; j < len(startingPoints); j++ {
-			indexPixel := startingPoints[j].data
+			indexPixel := startingPoints[j].info
 			indexPixelRedMin := indexPixel.r - errRange
 			if indexPixelRedMin > indexPixel.r {
 				indexPixelRedMin = 0
@@ -120,22 +120,29 @@ func sortImagePixels(pixArray [][]Pixel, errRange uint8) [][]Pixel {
 				indexPixelBlueMax = 255
 			}
 
-			if ((pixel.r <= indexPixelRedMax) && (pixel.r >= indexPixelRedMin)) &&
-				((pixel.g <= indexPixelGreenMax) && (pixel.g >= indexPixelGreenMin)) &&
-				((pixel.b <= indexPixelBlueMax) && (pixel.b >= indexPixelBlueMin)) {
+			if ((pixel.info.r <= indexPixelRedMax) && (pixel.info.r >= indexPixelRedMin)) &&
+				((pixel.info.g <= indexPixelGreenMax) && (pixel.info.g >= indexPixelGreenMin)) &&
+				((pixel.info.b <= indexPixelBlueMax) && (pixel.info.b >= indexPixelBlueMin)) {
 				temp := startingPoints[j]
-				pixel.next = temp.next.next
-				temp.next = pixel
+				if temp.next != nil {
+					pixel.next = temp.next
+				}
+				temp.next = &pixel
 				break
 			}
 
 			if j == len(startingPoints)-1 {
-				//TODO : Implement the "append to End " function here  and test and do the rest
+				temp := sortedList.head
+				for temp.next != nil {
+					temp = temp.next
+				}
+				temp.next = &pixel
 				break
 			}
 		}
 	}
 
+	//Todo: Finish LL implementation
 	pixCounter := 0
 	for y := 0; y < len(pixArray); y++ {
 		for x := 0; x < len(pixArray[y]); x++ {
