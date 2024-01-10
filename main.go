@@ -93,7 +93,7 @@ func sortImagePixels(pixArray [][]Pixel, errRange uint8) [][]Pixel {
 		pixel := Node{temp[i], nil}
 
 		for j := 0; j < len(startingPoints); j++ {
-			indexPixel := startingPoints[j].info
+			indexPixel := startingPoints[j].data
 			indexPixelRedMin := indexPixel.r - errRange
 			if indexPixelRedMin > indexPixel.r {
 				indexPixelRedMin = 0
@@ -120,9 +120,9 @@ func sortImagePixels(pixArray [][]Pixel, errRange uint8) [][]Pixel {
 				indexPixelBlueMax = 255
 			}
 
-			if ((pixel.info.r <= indexPixelRedMax) && (pixel.info.r >= indexPixelRedMin)) &&
-				((pixel.info.g <= indexPixelGreenMax) && (pixel.info.g >= indexPixelGreenMin)) &&
-				((pixel.info.b <= indexPixelBlueMax) && (pixel.info.b >= indexPixelBlueMin)) {
+			if ((pixel.data.r <= indexPixelRedMax) && (pixel.data.r >= indexPixelRedMin)) &&
+				((pixel.data.g <= indexPixelGreenMax) && (pixel.data.g >= indexPixelGreenMin)) &&
+				((pixel.data.b <= indexPixelBlueMax) && (pixel.data.b >= indexPixelBlueMin)) {
 				temp := startingPoints[j]
 				if temp.next != nil {
 					pixel.next = temp.next
@@ -144,6 +144,11 @@ func sortImagePixels(pixArray [][]Pixel, errRange uint8) [][]Pixel {
 
 	//Todo: Finish LL implementation
 	pixCounter := 0
+	u := sortedList.head
+	pixArray[y][x] = u
+	for u.next != nil {
+		u = u.next
+	}
 	for y := 0; y < len(pixArray); y++ {
 		for x := 0; x < len(pixArray[y]); x++ {
 			pixArray[y][x] = sortedPixels[pixCounter]
