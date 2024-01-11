@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"image"
 	"image/color"
 	"image/png"
@@ -14,22 +15,42 @@ type Pixel struct {
 	a uint8
 }
 
+type Node struct {
+	data Pixel
+	next *Node
+}
+
+type LinkedList struct {
+	head *Node
+}
+
+func (l *LinkedList) Append(p Pixel) {
+	list := &Node{data: p, next: nil}
+	if l.head == nil {
+		l.head = list
+	} else {
+		p := l.head
+		for p.next != nil {
+			p = p.next
+		}
+		p.next = list
+	}
+}
+
 // Function to be used for User Input/Config
 func main() {
 	//Intro Script
-	/*
-		fmt.Println("Welcome to Pix, the best pixel sorter of all time!")
-		var in string
-		fmt.Print("Enter the name of a file to be sorted (must be in the test directory and do not include the .png!) ")
-		_, err := fmt.Scan(&in)
-		if err != nil {
-			return
-		}
+	fmt.Println("Welcome to Pix, the best pixel sorter of all time!")
+	var in string
+	fmt.Print("Enter the name of a file to be sorted (must be in the test directory and do not include the .png!) ")
+	_, err := fmt.Scan(&in)
+	if err != nil {
+		return
+	}
 
-		//Read file
-		reader, err := os.Open("testing/" + in + ".png")
-	*/
-	reader, err := os.Open("testing/tester.png")
+	//Read file
+	reader, err := os.Open("testing/" + in + ".png")
+
 	defer func(reader *os.File) {
 		err := reader.Close()
 		check(err, "Error opening file.")
@@ -58,16 +79,15 @@ func check(err error, errCode string) {
 
 // Sorting pixels into color groups
 func processImagePixels(pixArray [][]Pixel) [][]Pixel {
-	/*
-		var in uint8
 
-		fmt.Print("Enter an error range for the pixel sorter: ")
-		_, err := fmt.Scan(&in)
-		if err != nil {
-			return nil
-		}
+	var in uint8
 
-	*/
+	fmt.Print("Enter an error range for the pixel sorter: ")
+	_, err := fmt.Scan(&in)
+	if err != nil {
+		return nil
+	}
+
 	pixArray = sortImagePixels(pixArray, 15)
 	return pixArray
 }
@@ -86,7 +106,7 @@ func sortImagePixels(pixArray [][]Pixel, errRange uint8) [][]Pixel {
 		}
 	}
 
-	startingPoints := []Node{Node{temp[0], nil}}
+	startingPoints := []Node{{temp[0], nil}}
 	sortedList := LinkedList{&startingPoints[0]}
 
 	for i := 1; i < len(temp); i++ {
@@ -145,15 +165,11 @@ func sortImagePixels(pixArray [][]Pixel, errRange uint8) [][]Pixel {
 	//Todo: Finish LL implementation
 	pixCounter := 0
 	u := sortedList.head
-	pixArray[y][x] = u
+	pixArray[0][0] = u.data
 	for u.next != nil {
 		u = u.next
-	}
-	for y := 0; y < len(pixArray); y++ {
-		for x := 0; x < len(pixArray[y]); x++ {
-			pixArray[y][x] = sortedPixels[pixCounter]
-			pixCounter++
-		}
+		pixArray[pixCounter/len(pixArray)][pixCounter%len(pixArray)] = u.data
+		pixCounter++
 	}
 
 	return pixArray
