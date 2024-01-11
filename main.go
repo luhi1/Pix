@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"image"
 	"image/color"
 	"image/png"
@@ -39,17 +38,20 @@ func (l *LinkedList) Append(p Pixel) {
 
 // Function to be used for User Input/Config
 func main() {
-	//Intro Script
-	fmt.Println("Welcome to Pix, the best pixel sorter of all time!")
-	var in string
-	fmt.Print("Enter the name of a file to be sorted (must be in the test directory and do not include the .png!) ")
-	_, err := fmt.Scan(&in)
-	if err != nil {
-		return
-	}
+	/*
+		//Intro Script
+		fmt.Println("Welcome to Pix, the best pixel sorter of all time!")
+		var in string
+		fmt.Print("Enter the name of a file to be sorted (must be in the test directory and do not include the .png!) ")
+		_, err := fmt.Scan(&in)
+		if err != nil {
+			return
+		}
 
-	//Read file
-	reader, err := os.Open("testing/" + in + ".png")
+		//Read file
+		reader, err := os.Open("testing/" + in + ".png")
+	*/
+	reader, err := os.Open("testing/tester.png")
 
 	defer func(reader *os.File) {
 		err := reader.Close()
@@ -79,14 +81,14 @@ func check(err error, errCode string) {
 
 // Sorting pixels into color groups
 func processImagePixels(pixArray [][]Pixel) [][]Pixel {
+	/*
+		var in uint8
 
-	var in uint8
-
-	fmt.Print("Enter an error range for the pixel sorter: ")
-	_, err := fmt.Scan(&in)
-	if err != nil {
-		return nil
-	}
+		fmt.Print("Enter an error range for the pixel sorter: ")
+		poo, err := fmt.Scan(&in)
+		if err != nil {
+			return nil
+		}*/
 
 	pixArray = sortImagePixels(pixArray, 15)
 	return pixArray
@@ -106,6 +108,7 @@ func sortImagePixels(pixArray [][]Pixel, errRange uint8) [][]Pixel {
 		}
 	}
 
+	//Starting points[0] has a different memory address from linkedList[0]!!!!!
 	startingPoints := []Node{{temp[0], nil}}
 	sortedList := LinkedList{&startingPoints[0]}
 
@@ -143,25 +146,22 @@ func sortImagePixels(pixArray [][]Pixel, errRange uint8) [][]Pixel {
 			if ((pixel.data.r <= indexPixelRedMax) && (pixel.data.r >= indexPixelRedMin)) &&
 				((pixel.data.g <= indexPixelGreenMax) && (pixel.data.g >= indexPixelGreenMin)) &&
 				((pixel.data.b <= indexPixelBlueMax) && (pixel.data.b >= indexPixelBlueMin)) {
-				temp := startingPoints[j]
-				if temp.next != nil {
-					pixel.next = temp.next
-				}
-				temp.next = &pixel
+				pixel.next = startingPoints[j].next
+				startingPoints[j].next = &pixel
 				break
 			}
 
 			if j == len(startingPoints)-1 {
-				temp := sortedList.head
+				temp := &startingPoints[j]
 				for temp.next != nil {
 					temp = temp.next
 				}
 				temp.next = &pixel
+				startingPoints = append(startingPoints, pixel)
 				break
 			}
 		}
 	}
-
 	//Todo: Finish LL implementation
 	pixCounter := 0
 	u := sortedList.head
