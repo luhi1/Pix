@@ -109,11 +109,11 @@ func sortImagePixels(pixArray [][]Pixel, errRange uint8) [][]Pixel {
 	}
 
 	//Starting points[0] has a different memory address from linkedList[0]!!!!!
-	startingPoints := []Node{{temp[0], nil}}
-	sortedList := LinkedList{&startingPoints[0]}
+	startingPoints := []*Node{&Node{temp[0], nil}}
+	sortedList := LinkedList{startingPoints[0]}
 
 	for i := 1; i < len(temp); i++ {
-		pixel := Node{temp[i], nil}
+		pixel := &Node{temp[i], nil}
 
 		for j := 0; j < len(startingPoints); j++ {
 			indexPixel := startingPoints[j].data
@@ -147,30 +147,29 @@ func sortImagePixels(pixArray [][]Pixel, errRange uint8) [][]Pixel {
 				((pixel.data.g <= indexPixelGreenMax) && (pixel.data.g >= indexPixelGreenMin)) &&
 				((pixel.data.b <= indexPixelBlueMax) && (pixel.data.b >= indexPixelBlueMin)) {
 				pixel.next = startingPoints[j].next
-				startingPoints[j].next = &pixel
+				startingPoints[j].next = pixel
 				break
 			}
 
 			if j == len(startingPoints)-1 {
-				temp := &startingPoints[j]
+				temp := startingPoints[j]
 				for temp.next != nil {
 					temp = temp.next
 				}
-				temp.next = &pixel
+				temp.next = pixel
 				startingPoints = append(startingPoints, pixel)
 				break
 			}
 		}
 	}
 	//Todo: Finish LL implementation
-	pixCounter := 0
 	u := sortedList.head
-	pixArray[0][0] = u.data
-	for u.next != nil {
-		u = u.next
-		pixArray[pixCounter/len(pixArray)][pixCounter%len(pixArray)] = u.data
-		pixCounter++
-	}
+    for i := 0; i < len(pixArray); i++ {
+        for j := 0; j < len(pixArray[i]); j++{
+            pixArray[i][j] = u.data
+            u = u.next
+        }
+    }
 
 	return pixArray
 }
