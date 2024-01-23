@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"image"
 	"image/color"
 	"image/png"
@@ -38,20 +39,17 @@ func (l *LinkedList) Append(p Pixel) {
 
 // Function to be used for User Input/Config
 func main() {
-	/*
-		//Intro Script
-		fmt.Println("Welcome to Pix, the best pixel sorter of all time!")
-		var in string
-		fmt.Print("Enter the name of a file to be sorted (must be in the test directory and do not include the .png!) ")
-		_, err := fmt.Scan(&in)
-		if err != nil {
-			return
-		}
+	//Intro Script
+	fmt.Println("Welcome to Pix, the best pixel sorter of all time!")
+	var in string
+	fmt.Print("Enter the name of a file to be sorted (must be in the test directory and do not include the .png!) ")
+	_, err := fmt.Scan(&in)
+	if err != nil {
+		return
+	}
 
-		//Read file
-		reader, err := os.Open("testing/" + in + ".png")
-	*/
-	reader, err := os.Open("testing/tester.png")
+	//Read file
+	reader, err := os.Open("testing/" + in + ".png")
 
 	defer func(reader *os.File) {
 		err := reader.Close()
@@ -81,16 +79,15 @@ func check(err error, errCode string) {
 
 // Sorting pixels into color groups
 func processImagePixels(pixArray [][]Pixel) [][]Pixel {
-	/*
-		var in uint8
 
-		fmt.Print("Enter an error range for the pixel sorter: ")
-		poo, err := fmt.Scan(&in)
-		if err != nil {
-			return nil
-		}*/
+	var in uint8
 
-	pixArray = sortImagePixels(pixArray, 15)
+	fmt.Print("Enter an error range for the pixel sorter: ")
+	_, err := fmt.Scan(&in)
+	if err != nil {
+		return nil
+	}
+	pixArray = sortImagePixels(pixArray, in)
 	return pixArray
 }
 
@@ -108,9 +105,9 @@ func sortImagePixels(pixArray [][]Pixel, errRange uint8) [][]Pixel {
 		}
 	}
 
-	//Starting points[0] has a different memory address from linkedList[0]!!!!!
-	startingPoints := []*Node{&Node{temp[0], nil}}
-	sortedList := LinkedList{startingPoints[0]}
+	headPix := &Node{temp[0], nil}
+	startingPoints := []*Node{headPix}
+	sortedList := LinkedList{headPix}
 
 	for i := 1; i < len(temp); i++ {
 		pixel := &Node{temp[i], nil}
@@ -146,8 +143,7 @@ func sortImagePixels(pixArray [][]Pixel, errRange uint8) [][]Pixel {
 			if ((pixel.data.r <= indexPixelRedMax) && (pixel.data.r >= indexPixelRedMin)) &&
 				((pixel.data.g <= indexPixelGreenMax) && (pixel.data.g >= indexPixelGreenMin)) &&
 				((pixel.data.b <= indexPixelBlueMax) && (pixel.data.b >= indexPixelBlueMin)) {
-				pixel.next = startingPoints[j].next
-				startingPoints[j].next = pixel
+				//Rethink the order of appending to not make it append backwards lol
 				break
 			}
 
@@ -164,12 +160,12 @@ func sortImagePixels(pixArray [][]Pixel, errRange uint8) [][]Pixel {
 	}
 	//Todo: Finish LL implementation
 	u := sortedList.head
-    for i := 0; i < len(pixArray); i++ {
-        for j := 0; j < len(pixArray[i]); j++{
-            pixArray[i][j] = u.data
-            u = u.next
-        }
-    }
+	for i := 0; i < len(pixArray); i++ {
+		for j := 0; j < len(pixArray[i]); j++ {
+			pixArray[i][j] = u.data
+			u = u.next
+		}
+	}
 
 	return pixArray
 }
@@ -216,7 +212,7 @@ func encodeImage(m image.Image, pixArray [][]Pixel) {
 
 	//Create file for output
 	output, err := os.Create("output.png")
-
+	check(err, "Error creating output image")
 	//Write output image to "output.png" and encode to .png format
 	err = png.Encode(output, img)
 	check(err, "Error encoding image")
