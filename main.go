@@ -16,24 +16,25 @@ type Pixel struct {
 }
 
 type Node struct {
-	data Pixel
-	next *Node
+	data     Pixel
+	next     *Node
+	previous *Node
 }
 
 type LinkedList struct {
 	head *Node
+	tail *Node
 }
 
-func (l *LinkedList) Append(p Pixel) {
-	list := &Node{data: p, next: nil}
+func (l *LinkedList) Append(newNode *Node) {
+
 	if l.head == nil {
-		l.head = list
+		l.head = newNode
+		l.tail = newNode
 	} else {
-		p := l.head
-		for p.next != nil {
-			p = p.next
-		}
-		p.next = list
+		newNode.previous = l.tail
+		l.tail.next = newNode
+		l.tail = newNode
 	}
 }
 
@@ -105,12 +106,12 @@ func sortImagePixels(pixArray [][]Pixel, errRange uint8) [][]Pixel {
 		}
 	}
 
-	headPix := &Node{temp[0], nil}
-	startingPoints := []*Node{headPix}
-	sortedList := LinkedList{headPix}
+	startingPixel := &Node{temp[0], nil, nil}
+	startingPoints := []*Node{startingPixel}
+	sortedList := LinkedList{startingPixel, startingPixel}
 
 	for i := 1; i < len(temp); i++ {
-		pixel := &Node{temp[i], nil}
+		pixel := &Node{temp[i], nil, nil}
 
 		for j := 0; j < len(startingPoints); j++ {
 			indexPixel := startingPoints[j].data
@@ -143,17 +144,19 @@ func sortImagePixels(pixArray [][]Pixel, errRange uint8) [][]Pixel {
 			if ((pixel.data.r <= indexPixelRedMax) && (pixel.data.r >= indexPixelRedMin)) &&
 				((pixel.data.g <= indexPixelGreenMax) && (pixel.data.g >= indexPixelGreenMin)) &&
 				((pixel.data.b <= indexPixelBlueMax) && (pixel.data.b >= indexPixelBlueMin)) {
-				//Rethink the order of appending to not make it append backwards lol
-				break
+				if j < len(startingPoints)-1 {
+					pixel.next = startingPoints[j+1]
+					pixel.previous = startingPoints[j+1].previous
+					startingPoints[j+1].previous.next = pixel
+					startingPoints[j+1].previous = pixel
+					break
+				}
 			}
 
 			if j == len(startingPoints)-1 {
-				temp := startingPoints[j]
-				for temp.next != nil {
-					temp = temp.next
-				}
-				temp.next = pixel
+				sortedList.Append(pixel)
 				startingPoints = append(startingPoints, pixel)
+
 				break
 			}
 		}
