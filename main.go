@@ -67,7 +67,7 @@ func main() {
 	}
 
 	pixArray := decodeImage(m)
-	pixArray = processImagePixels(pixArray)
+	pixArray = processImagePixels(m, pixArray)
 	encodeImage(m, pixArray)
 }
 
@@ -79,7 +79,7 @@ func check(err error, errCode string) {
 }
 
 // Sorting pixels into color groups
-func processImagePixels(pixArray [][]Pixel) [][]Pixel {
+func processImagePixels(m image.Image, pixArray [][]Pixel) [][]Pixel {
 
 	var in uint8
 
@@ -88,13 +88,13 @@ func processImagePixels(pixArray [][]Pixel) [][]Pixel {
 	if err != nil {
 		return nil
 	}
-	pixArray = sortImagePixels(pixArray, in)
+	pixArray = sortImagePixels(m, pixArray, in)
 	return pixArray
 }
 
 // Sort pixels into arrays of similar pixels (to reduce load on sorting algorithm)
 // Merge back into an 2D array (could be just a 1D array, but 2D makes for easier proccessing!)
-func sortImagePixels(pixArray [][]Pixel, errRange uint8) [][]Pixel {
+func sortImagePixels(m image.Image, pixArray [][]Pixel, errRange uint8) [][]Pixel {
 	if pixArray == nil {
 		return pixArray
 	}
@@ -150,6 +150,9 @@ func sortImagePixels(pixArray [][]Pixel, errRange uint8) [][]Pixel {
 					startingPoints[j+1].previous.next = pixel
 					startingPoints[j+1].previous = pixel
 					break
+				} else {
+					sortedList.Append(pixel)
+					break
 				}
 			}
 
@@ -161,10 +164,13 @@ func sortImagePixels(pixArray [][]Pixel, errRange uint8) [][]Pixel {
 			}
 		}
 	}
-	//Todo: Finish LL implementation
+
 	u := sortedList.head
 	for i := 0; i < len(pixArray); i++ {
 		for j := 0; j < len(pixArray[i]); j++ {
+			if (i * j) == ((len(pixArray[i]) - 1) * (len(pixArray) - 1) / 3) {
+				encodeImage(m, pixArray)
+			}
 			pixArray[i][j] = u.data
 			u = u.next
 		}
@@ -198,6 +204,7 @@ func decodeImage(m image.Image) [][]Pixel {
 
 // Convert 2D Array of Pixels into Image
 func encodeImage(m image.Image, pixArray [][]Pixel) {
+	os.Remove("output.png")
 	//Get Dimensions of image and create a new image for output based on dimensions
 	//Image is defined as a rectangle with W: Max.X and L: Max.Y based on dimensions
 	bounds := m.Bounds()
