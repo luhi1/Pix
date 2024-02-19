@@ -1,11 +1,19 @@
 package main
 
 import (
-	"fmt"
+	"fyne.io/fyne/v2"
+	"fyne.io/fyne/v2/app"
+	"fyne.io/fyne/v2/canvas"
+	"fyne.io/fyne/v2/container"
+	"fyne.io/fyne/v2/dialog"
+	"fyne.io/fyne/v2/storage"
+	"fyne.io/fyne/v2/widget"
 	"image"
 	"image/color"
 	"image/png"
+	"io/ioutil"
 	"os"
+	"strconv"
 )
 
 type Pixel struct {
@@ -40,55 +48,170 @@ func (l *LinkedList) Append(newNode *Node) {
 
 // Function to be used for User Input/Config
 func main() {
-	//Intro Script
-	fmt.Println("Welcome to Pix, the best pixel sorter of all time!")
-	var in string
-	fmt.Print("Enter the name of a file to be sorted (must be in the test directory and do not include the .png!) ")
-	_, err := fmt.Scan(&in)
-	if err != nil {
-		return
-	}
+	//Create GUI
+	a := app.New()
 
-	//Read file
-	reader, err := os.Open("testing/" + in + ".png")
+	w := a.NewWindow("Pix")
 
-	defer func(reader *os.File) {
-		err := reader.Close()
-		check(err, "Error opening file.")
-	}(reader)
-	check(err, "Error opening file.")
+	//Container + Image + Window Setup
+	var cont *fyne.Container
+	var image *canvas.Image
 
-	//Decode file into usable format
-	m, err := png.Decode(reader)
-	check(err, "Error decoding file.")
+	//This will be the path of the file the user uploads!
+	var imageURI string
 
-	if err != nil {
-		panic(err)
-	}
+	//This will be used later to sort the image
+	var errRange uint8
+	fillerText := canvas.NewText("", color.White)
+	insertBtn := widget.NewButton("1) Insert a File to Be Sorted", func() {
+		//Read File Selection
+		fileDialog := dialog.NewFileOpen(
+			func(uc fyne.URIReadCloser, e error) {
+				cont.Remove(fillerText)
+				cont.Remove(image)
+				//Check to make sure user selected something
+				if e != nil || uc == nil {
+					fillerText = canvas.NewText("Error selecting file", color.White)
+					cont.Add(fillerText)
+					return
+				}
 
-	pixArray := decodeImage(m)
-	pixArray = processImagePixels(m, pixArray)
-	encodeImage(m, pixArray)
-}
+				//Read File Info
+				data, err := ioutil.ReadAll(uc)
+				if err != nil {
+					fillerText = canvas.NewText("Error selecting file", color.White)
+					cont.Add(fillerText)
+					return
+				}
+				imageURI = uc.URI().Path()
+				res := fyne.NewStaticResource(uc.URI().Name(), data)
 
-// Basic error handling
-func check(err error, errCode string) {
-	if err != nil {
-		print(errCode)
-	}
+				//Create Image widget and add to container
+				image = canvas.NewImageFromResource(res)
+				image.ScaleMode = canvas.ImageScaleFastest
+				image.FillMode = canvas.ImageFillContain
+				image.SetMinSize(fyne.NewSize(600, 600))
+				cont.Add(image)
+			}, w)
+
+		//only allow png files
+		fileDialog.SetFilter(
+			storage.NewExtensionFileFilter([]string{".png"}))
+		fileDialog.Show()
+	})
+	sortBtn := widget.NewButton("3) Sort Image by Color", func() {
+		cont.Remove(fillerText)
+		if imageURI == "" {
+			fillerText = canvas.NewText("No File Selected!", color.White)
+			cont.Add(fillerText)
+			return
+		}
+		//Read file
+		reader, err := os.Open(imageURI)
+
+		defer func(reader *os.File) {
+			err := reader.Close()
+			if err != nil {
+				fillerText = canvas.NewText("Error reading file", color.White)
+				cont.Add(fillerText)
+				return
+			}
+		}(reader)
+
+		//Decode file into usable format
+		m, err := png.Decode(reader)
+		if err != nil {
+			fillerText = canvas.NewText("Error decoding file", color.White)
+			cont.Add(fillerText)
+			return
+		}
+
+		pixArray := decodeImage(m)
+		if err != nil {
+			fillerText = canvas.NewText("Error decoding image", color.White)
+			cont.Add(fillerText)
+			return
+		}
+
+		//This is either an errRange with an invalid number or one that was never filled out
+		if errRange == 0 {
+			errRange = 15
+		}
+		pixArray = processImagePixels(m, pixArray, errRange)
+		if pixArray == nil {
+			fillerText = canvas.NewText("Error processing file", color.White)
+			cont.Add(fillerText)
+			return
+		}
+		m = encodeImage(m, pixArray)
+		if m == nil {
+			fillerText = canvas.NewText("Error encoding image", color.White)
+			cont.Add(fillerText)
+			return
+		}
+
+		//Create a new window for image
+		//Sort Image
+		//Put into that window
+		newW := fyne.CurrentApp().NewWindow("Pix Output")
+
+		image := canvas.NewImageFromImage(m)
+		image.ScaleMode = canvas.ImageScaleFastest
+		image.FillMode = canvas.ImageFillOriginal
+		newW.SetContent(image)
+		newW.CenterOnScreen()
+		newW.SetFullScreen(true)
+		newW.Show()
+
+	})
+
+	rangeBtn := widget.NewButton("2) Change the Error Range of Sorting", func() {
+		errCont := container.NewVBox()
+		errW := fyne.CurrentApp().NewWindow("Pix Error Range")
+		rangeText := canvas.NewText("Pix uses an error range to determine how similar or how different colors can be before they are grouped together", color.White)
+		rangeText1 := canvas.NewText("Insert an Error Range for sorting below", color.White)
+		rangeText2 := canvas.NewText("Goes from Color Correctness ---> Compression", color.White)
+		input := widget.NewEntry()
+		input.SetPlaceHolder("Minimum 1, Maximum 255")
+		saveBtn := widget.NewButton("Save", func() {
+			temp, err := strconv.Atoi(input.Text)
+			if err != nil || temp == 0 || temp > 255 {
+				cont.Remove(fillerText)
+				fillerText = canvas.NewText("Invalid error range!", color.White)
+				cont.Add(fillerText)
+				return
+			}
+			errRange = uint8(temp)
+			errW.Close()
+		})
+		errCont = container.NewVBox(
+			rangeText,
+			rangeText1,
+			rangeText2,
+			input,
+			saveBtn,
+		)
+		errW.SetContent(errCont)
+		errW.Resize(fyne.NewSize(75, 150))
+		errW.Show()
+	})
+
+	//Populate container
+	cont = container.NewVBox(
+		insertBtn,
+		rangeBtn,
+		sortBtn,
+		fillerText,
+	)
+
+	//Display GUI and run
+	w.SetContent(cont)
+	w.ShowAndRun()
 }
 
 // Sorting pixels into color groups
-func processImagePixels(m image.Image, pixArray [][]Pixel) [][]Pixel {
-
-	var in uint8
-
-	fmt.Print("Enter an error range for the pixel sorter: ")
-	_, err := fmt.Scan(&in)
-	if err != nil {
-		return nil
-	}
-	pixArray = sortImagePixels(m, pixArray, in)
+func processImagePixels(m image.Image, pixArray [][]Pixel, errRange uint8) [][]Pixel {
+	pixArray = sortImagePixels(m, pixArray, errRange)
 	return pixArray
 }
 
@@ -168,9 +291,6 @@ func sortImagePixels(m image.Image, pixArray [][]Pixel, errRange uint8) [][]Pixe
 	u := sortedList.head
 	for i := 0; i < len(pixArray); i++ {
 		for j := 0; j < len(pixArray[i]); j++ {
-			if (i * j) == ((len(pixArray[i]) - 1) * (len(pixArray) - 1) / 3) {
-				encodeImage(m, pixArray)
-			}
 			pixArray[i][j] = u.data
 			u = u.next
 		}
@@ -203,7 +323,7 @@ func decodeImage(m image.Image) [][]Pixel {
 }
 
 // Convert 2D Array of Pixels into Image
-func encodeImage(m image.Image, pixArray [][]Pixel) {
+func encodeImage(m image.Image, pixArray [][]Pixel) image.Image {
 	os.Remove("output.png")
 	//Get Dimensions of image and create a new image for output based on dimensions
 	//Image is defined as a rectangle with W: Max.X and L: Max.Y based on dimensions
@@ -220,10 +340,5 @@ func encodeImage(m image.Image, pixArray [][]Pixel) {
 		}
 	}
 
-	//Create file for output
-	output, err := os.Create("output.png")
-	check(err, "Error creating output image")
-	//Write output image to "output.png" and encode to .png format
-	err = png.Encode(output, img)
-	check(err, "Error encoding image")
+	return img
 }
