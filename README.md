@@ -1,6 +1,6 @@
 # The (*Pix*)el sorter!
 
-Insert Gif Here
+![Gif showcasing the project](images/showcase.gif "Showcase Gif")
 
 ## A simple image manipulation tool written in GO to help graphic designers and photographers see compression and composition of their photos.
 
@@ -29,21 +29,24 @@ Currently we only have a Windows binary available. Go over to the releases tab o
         cd /path/to/folder/where/binary/is
         ./main.go  
 ## Usage
-1. Select the file you want to sort. !!!!!!!!ONLY WORKS WITH .PNG FILES FOR NOW!!!!!!!!!!!!!!!!!!
+1. Select the file you want to sort. **ONLY WORKS WITH .PNG FILES FOR NOW!**
 2. Select your error range (see below)
 3. Sort!
 
 ## Error Range in Depth
-As a user, you can decide how similar colors can be in order for them to be grouped together using the "error range" selector. Larger error ranges are useful to show compression as only exact or close to exact duplicate pixels are put into the same category.   
+As a user, you can decide how similar colors can be in order for them to be grouped together using the "error range" selector. Larger error ranges are useful to show compression as only exact or close to exact duplicate pixels are put into the same category. Smaller error ranges are good for showing color composition as all similar colors are easily grouped.
+
+⚠️ Decreasing the error range can drastically reduce performance. It is reccomended to not reduce the error range below 15 for best performance and results for seeing image composition. ⚠️
 
 For example:
 * Starting Image:
-  [Insert Image Here]
+  ![Image of Clouds](images/clouds.png "Clouds")
 * Error Range 254 Output:
-  [Insert Image Here]
-* Error Range 1 Output:
-  [Insert Image Here]
-## Example speeds on my 8 Core, AMD Ryzen 5 3400G (GPU Rendering isn't supported in this release)
+  ![Output of Clouds, showing compression](images/compression.png "Compression Ou")
+  Notice how large chunks of the clouds are still somewhat in shape. That is signs of compression. 
+* Error Range 1 Output (Tiny error range only used to show extremes. Again, stick to error ranges >= 15):
+  ![Output of Clouds, showing image composition](images/accuracy.png "Composition Output of Clouds")
+  Notice how specific colors get grouped together.
 
 ## Known Issues
 
@@ -58,3 +61,5 @@ sudo apt install libxrandr-dev
 sudo apt install libxrinerama-dev
 sudo apt install libxi-dev
 sudo apt install libxxf86vm-dev
+```
+#### All rendering shown on this README was done on my 8 Core, AMD Ryzen 5 3400G (GPU Rendering isn't supported in this release)
